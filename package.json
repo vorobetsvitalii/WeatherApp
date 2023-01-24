@@ -9,10 +9,22 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "ajax": "^0.0.4",
+    "eas-cli": "^3.4.0",
     "expo": "~47.0.12",
+    "expo-linear-gradient": "~12.0.1",
+    "expo-module-scripts": "^3.0.4",
     "expo-status-bar": "~1.4.2",
+    "jquery": "^3.6.3",
     "react": "18.1.0",
-    "react-native": "0.70.5"
+    "react-native": "0.70.5",
+    "react-native-animated-loader": "^1.0.0",
+    "react-native-expo-viewport-units": "^0.0.8",
+    "react-native-linear-gradient": "^2.6.2",
+    "react-native-orientation-loading-overlay": "^0.1.6",
+    "react-native-screens": "~3.18.0",
+    "react-native-vector-icons": "^9.2.0",
+    "react-native-viewport-units": "^0.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
