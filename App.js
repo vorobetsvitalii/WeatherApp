@@ -381,7 +381,7 @@ export default function App() {
           </View>
           <View style={{ marginTop: vh(5) }}>
             <View style={{ justifyContent: "center", alignItems: "center", marginBottom: vw(5) }}>
-              <Text style={{ fontSize: vw(5), color: "#fff", fontWeight: "500" }}>Прогноз погди на 5 днів</Text>
+              <Text style={{ fontSize: vw(5), color: "#fff", fontWeight: "500" }}>Прогноз погоди на 5 днів</Text>
             </View>
             <ScrollView horizontal={true} >
               <FlatList
