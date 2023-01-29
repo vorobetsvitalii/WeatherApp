@@ -1,5 +1,6 @@
 # WeatherApp
 Weather app (React Native)
+
 ##Run application
 In the project directory, you can run:
 
