@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, SafeAreaView, ScrollView, RefreshControl, TextInput, TouchableOpacity, Button, FlatList, Alert, } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, RefreshControl, TextInput, TouchableOpacity, FlatList, Alert, } from 'react-native';
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { vw, vh } from 'react-native-expo-viewport-units';
@@ -64,7 +64,20 @@ export default function App() {
       }
     }
     if (b) {
-      AsyncStorage.setItem(city.indexOf(name).toString(), name);
+      let index = city.indexOf(name);
+      while (keys.includes(index.toString())) {
+        index++;
+      }
+      AsyncStorage.setItem(index.toString(), name);
+    }
+  }
+
+  const deleteFromLocal = async (name) => {
+    const keys = await AsyncStorage.getAllKeys();
+    console.log(keys)
+    AsyncStorage.multiRemove(keys)
+    for (let i = 0; i < city.length; i++) {
+      await AsyncStorage.setItem(i.toString(), city[i])
     }
   }
 
@@ -126,7 +139,9 @@ export default function App() {
 
   const onRefresh = async () => {
     weather.length = 0;
-    return city.map(item => dataFetch(item, true))
+    for (let i = 0; i < city.length; i++) {
+      await dataFetch(city[i])
+    }
   }
 
 
@@ -160,7 +175,7 @@ export default function App() {
     <View style={styles.hoursWeaterItem}>
       <Text style={{ color: "#fff" }}>{item.dt_txt[8]}{item.dt_txt[9]}-{item.dt_txt[5]}{item.dt_txt[6]}{item.dt_txt.substring(10, 16)}</Text>
       <Text style={{ color: "#fff", fontWeight: "700" }}>{item.weather[0].description}</Text>
-      <View style={{flexDirection:'row', alignItems: 'center'}}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <MaterialCommunityIcons
           name={'arrow-' + arrowDirection(item.wind.deg) + '-thin'}
           size={vw(7)}
@@ -199,8 +214,8 @@ export default function App() {
                   SetLength(city.length)
                   const index = city.indexOf(item.city.name)
                   weather.splice(index, 1)
-                  AsyncStorage.removeItem(city.indexOf(item.city.name).toString())
                   city.splice(index, 1)
+                  deleteFromLocal(item.city.name)
                   SetLength(city.length)
                   if (city.length == 0) {
                     SetManageCity(false)
@@ -288,6 +303,15 @@ export default function App() {
         style={styles.container}
       >
         <StatusBar backgroundColor='#0066ff' />
+        <MaterialCommunityIcons
+          name='arrow-left'
+          size={vw(7)}
+          style={{ marginTop: vh(7), marginLeft: vw(3), color: '#fff', display: city.length > 0 ? 'flex' : 'none' }}
+          onPress={() => {
+            SetInputCity(false)
+            SetManageCity(true)
+          }}
+        />
         <View style={styles.inputCity}>
           <TextInput
             onChangeText={TempCity => SetTempCity(TempCity)}
