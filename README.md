@@ -1,7 +1,7 @@
 # WeatherApp
 Weather app (React Native)
 
-##Run application
+## Run application
 In the project directory, you can run:
 
 ### `npm start`
