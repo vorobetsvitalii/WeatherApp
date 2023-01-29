@@ -1,11 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Image, SafeAreaView, ScrollView, RefreshControl, TextInput, TouchableOpacity, Button, FlatList, } from 'react-native';
+import { StyleSheet, Text, View, Image, SafeAreaView, ScrollView, RefreshControl, TextInput, TouchableOpacity, Button, FlatList, Alert, } from 'react-native';
 import React, { useState, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { vw, vh } from 'react-native-expo-viewport-units';
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import SimpleLineIcons from "react-native-vector-icons/SimpleLineIcons";
 import OrientationLoadingOverlay from 'react-native-orientation-loading-overlay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function App() {
@@ -14,8 +16,57 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
   const [city] = useState([]);
   const [TempCity, SetTempCity] = useState("");
-  const [lenght, SetLenght] = useState();
+  const [manageCity, SetManageCity] = useState(false)
+  const [inputCity, SetInputCity] = useState(true)
   const [nameError, SetNameError] = useState("");
+  const [length, SetLength] = useState(0)
+
+
+  // Functions
+
+
+  useEffect(() => {
+    Start()
+  }, []);
+
+  const Start = async () => {
+    await getAllLocal()
+    if (city.length > 0) {
+      console.log(false)
+      SetInputCity(false)
+      SetLoading(false)
+    }
+    else {
+      SetInputCity(true)
+      SetLoading(false);
+    }
+  }
+
+  const getAllLocal = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const result = await AsyncStorage.multiGet(keys);
+      for (var i = 0; i < keys.length; i++) {
+        await dataFetch(result[i][1])
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const addToLocal = async (name) => {
+    const keys = await AsyncStorage.getAllKeys();
+    const result = await AsyncStorage.multiGet(keys);
+    let b = true;
+    for (var j = 0; j < result.length; j++) {
+      if (name == result[j][1]) {
+        b = false;
+      }
+    }
+    if (b) {
+      AsyncStorage.setItem(city.indexOf(name).toString(), name);
+    }
+  }
 
   const dataFetch = async (cityName) => {
     const data = await (
@@ -23,6 +74,7 @@ export default function App() {
         "https://api.openweathermap.org/data/2.5/forecast?q=" + cityName + "&lang=ua&appid=eb52de8aeec7f52c70920b17224d8628"
       )
     ).json();
+    console.log(cityName)
     // set state when the data received
     if (data.cod == 200) {
       var b = true
@@ -30,45 +82,40 @@ export default function App() {
         if (item.city.name == data.city.name) {
           city.pop()
           b = false
-          console.log(23)
           SetNameError("Цей населений пункт вже є у вашому переліку")
         }
       })
       if (b) {
-        console.log(24)
+        city.push(data.city.name)
+        addToLocal(data.city.name)
         weather.push(data);
+        SetInputCity(false)
         return 200
       }
     }
     else if (data.cod == 404) {
-      city.pop()
+      //city.pop()
       return 404;
 
-      //SetLenght(city.length)
+      //SetLength(city.length)
     }
-    console.log(city)
   };
 
 
   const ConfirmCity = async (name) => {
-    while(name[name.length - 1] == ' '){
-      console.log(name)
+    while (name[name.length - 1] == ' ') {
       name = name.slice(0, name.length - 1)
-      console.log(name)
     }
     //SetLoading(true)
     if (!city.includes(name)) {
-      city.push(name)
       let a = await dataFetch(name)
       SetLoading(false)
       if (a == 200) {
-        SetLenght(city.length)
         SetLoading(false)
       }
       else if (a == 404) {
         SetNameError("Такого населеного пункту не знайдено")
       }
-      console.log("sd", a)
     }
     else {
       SetNameError("Цей населений пункт вже є у вашому переліку")
@@ -79,22 +126,10 @@ export default function App() {
 
   const onRefresh = async () => {
     weather.length = 0;
-    console.log("refreshing")
-    city.map(item => dataFetch(item))
+    return city.map(item => dataFetch(item, true))
   }
 
 
-
-  useEffect(() => {
-    // fetch data
-    console.log("use")
-    if (lenght > 0) {
-      dataFetch(city[lenght - 1]);
-    }
-    else {
-      SetLoading(false);
-    }
-  }, [city.lenght]);
 
 
   const arrowDirection = (deg) => {
@@ -119,19 +154,76 @@ export default function App() {
     if (deg >= 292.5 && deg <= 347.5) return "Пн-Зх"
   }
 
+  //Views
+
   const hoursWeatherView = ({ item }) => (
     <View style={styles.hoursWeaterItem}>
-      <Text style={{ color: "#fff" }}>{item.dt_txt.substring(5).slice(0, 11)}</Text>
-      <Text style={{ color: "#fff", fontWeight: "700", marginLeft: vw(30), position: "absolute" }}>{item.weather[0].description}</Text>
-      <MaterialCommunityIcons
-        name={'arrow-' + arrowDirection(item.wind.deg) + '-thin'}
-        size={vw(7)}
-        style={{ color: "#fff", marginLeft: vw(45) }}
-      />
-      <Text style={{ color: "#fff" }}>{Math.round(item.wind.speed)}м/c</Text>
-      <Text style={{ marginLeft: vw(5), fontSize: vw(5), color: "#fff" }}>{Math.round(item.main.temp - 273.15)}°C</Text>
+      <Text style={{ color: "#fff" }}>{item.dt_txt[8]}{item.dt_txt[9]}-{item.dt_txt[5]}{item.dt_txt[6]}{item.dt_txt.substring(10, 16)}</Text>
+      <Text style={{ color: "#fff", fontWeight: "700" }}>{item.weather[0].description}</Text>
+      <View style={{flexDirection:'row', alignItems: 'center'}}>
+        <MaterialCommunityIcons
+          name={'arrow-' + arrowDirection(item.wind.deg) + '-thin'}
+          size={vw(7)}
+          style={{ color: "#fff", }}
+        />
+        <Text style={{ color: "#fff" }}>{Math.round(item.wind.speed)}м/c</Text>
+      </View>
+      <Text style={{ fontSize: vw(5), color: "#fff" }}>{Math.round(item.main.temp - 273.15)}°C</Text>
     </View>
   )
+
+  const CityView = ({ item }) => (
+    <View style={styles.cityItem}>
+      <Text style={{ color: "#fff", fontSize: vw(6), marginLeft: vw(3) }}>{item.city.name}</Text>
+      <Ionicons
+        name='location-outline'
+        size={vw(7)}
+        style={{ color: "#fff" }}
+      />
+      <TouchableOpacity
+        style={{ position: 'absolute', marginLeft: vw(85) }}
+        onPress={() => {
+          Alert.alert(
+            '',
+            'Ви дійсно бажаєте вилучити місто ' + item.city.name + ' з вашого списку?',
+            [
+              {
+                text: 'Ні',
+                onPress: () => {
+                  console.log(weather)
+                }
+              },
+              {
+                text: 'Так',
+                onPress: () => {
+                  SetLength(city.length)
+                  const index = city.indexOf(item.city.name)
+                  weather.splice(index, 1)
+                  AsyncStorage.removeItem(city.indexOf(item.city.name).toString())
+                  city.splice(index, 1)
+                  SetLength(city.length)
+                  if (city.length == 0) {
+                    SetManageCity(false)
+                    SetInputCity(true)
+                  }
+                }
+              },
+            ],
+          );
+        }}
+      >
+        <SimpleLineIcons
+          name='minus'
+          size={vw(7)}
+          color={"#fff"}
+        />
+      </TouchableOpacity>
+    </View>
+  )
+
+
+  //Screens
+
 
   const LoadingScreen = () => {
     return (
@@ -145,6 +237,44 @@ export default function App() {
         <OrientationLoadingOverlay
           visible={true}
         />
+      </LinearGradient>
+    )
+  }
+
+  const manageCityScreen = () => {
+    return (
+      <LinearGradient
+        colors={['#0066ff', "#00abff", "#00ffff"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.container}
+      >
+        <StatusBar backgroundColor='#0066ff' />
+        <MaterialCommunityIcons
+          name='arrow-left'
+          size={vw(7)}
+          style={{ marginTop: vh(7), marginLeft: vw(3), color: '#fff' }}
+          onPress={() => {
+            SetManageCity(false)
+          }}
+        />
+        <FlatList
+          renderItem={CityView}
+          data={weather}
+          //style={{ marginTop: vh(6) }}
+          extraData={length}
+          keyExtractor={(item) => item.city.name}
+        />
+        <TouchableOpacity style={styles.addCity}
+          onPress={() => {
+            SetInputCity(true)
+            SetManageCity(false)
+          }
+          }
+        >
+          <Text style={{ color: '#fff', fontSize: vw(10), fontWeight: '700' }}>+</Text>
+          <Text style={{ color: '#fff', fontSize: vw(6) }}>Додати місто</Text>
+        </TouchableOpacity>
       </LinearGradient>
     )
   }
@@ -201,8 +331,7 @@ export default function App() {
           <Text
             style={styles.cityChange}
             onPress={() => {
-              SetLenght(0)
-              InputCity()
+              SetManageCity(true)
             }}
           >Керування містами</Text>
           <View style={styles.location}>
@@ -245,13 +374,16 @@ export default function App() {
 
   return (
     loading ? LoadingScreen() :
-      lenght > 0 ? <FlatList
-        data={weather}
-        renderItem={MainScreen}
-        horizontal={true}
-        snapToAlignment="start"
-        snapToInterval={vw(100)}
-      /> : InputCity()
+      !inputCity ?
+        manageCity ? manageCityScreen() :
+          <FlatList
+            data={weather}
+            renderItem={MainScreen}
+            horizontal={true}
+            snapToAlignment="start"
+            snapToInterval={vw(100)}
+          />
+        : InputCity()
   );
 }
 
@@ -315,9 +447,17 @@ const styles = StyleSheet.create({
   },
   hoursWeaterItem: {
     alignItems: "center",
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     width: vw(100),
     height: vh(5),
+    flexDirection: "row",
+    borderBottomColor: "black",
+    borderBottomWidth: 1
+  },
+  cityItem: {
+    alignItems: 'center',
+    width: vw(100),
+    height: vh(10),
     flexDirection: "row",
     borderBottomColor: "black",
     borderBottomWidth: 1
@@ -328,5 +468,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     alignSelf: "flex-end",
     marginTop: vw(15)
+  },
+  addCity: {
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   }
 });
