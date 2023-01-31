@@ -148,18 +148,18 @@ export default function App() {
 
 
   const arrowDirection = (deg) => {
-    if (deg <= 22.5 || deg >= 347.5) return "up"
-    if (deg >= 22.5 && deg <= 67.5) return "top-right"
-    if (deg >= 67.5 && deg <= 112.5) return "right"
-    if (deg >= 112.5 && deg <= 157.5) return "bottom-right"
-    if (deg >= 157.5 && deg <= 202.5) return "down"
-    if (deg >= 202.5 && deg <= 247.5) return "bottom-left"
-    if (deg >= 247.5 && deg <= 292.5) return "left"
-    if (deg >= 292.5 && deg <= 347.5) return "top-left"
+    if (deg <= 22.5 || deg >= 347.5) return "down"
+    if (deg >= 22.5 && deg <= 67.5) return "bottom-left"
+    if (deg >= 67.5 && deg <= 112.5) return "left"
+    if (deg >= 112.5 && deg <= 157.5) return "top-left"
+    if (deg >= 157.5 && deg <= 202.5) return "up"
+    if (deg >= 202.5 && deg <= 247.5) return "top-right"
+    if (deg >= 247.5 && deg <= 292.5) return "right"
+    if (deg >= 292.5 && deg <= 347.5) return "bottom-right"
   }
 
   const windDirection = (deg) => {
-    if (deg <= 22.5 && deg >= 347.5) return "Пн"
+    if (deg <= 22.5 || deg >= 347.5) return "Пн"
     if (deg >= 22.5 && deg <= 67.5) return "Пн-Сх"
     if (deg >= 67.5 && deg <= 112.5) return "Сх"
     if (deg >= 112.5 && deg <= 157.5) return "Пд-Сх"
